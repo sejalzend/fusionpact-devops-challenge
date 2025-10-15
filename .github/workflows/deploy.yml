@@ -42,5 +42,5 @@ jobs:
           sudo docker-compose -f docker-compose.yml down
           sudo docker-compose -f docker-compose.yml up -d --build
           sudo docker system prune -f
-          echo "✅ Deployment completed successfully!"
+          echo "Deployment completed successfully"
           sudo docker ps
