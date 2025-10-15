@@ -1,3 +1,35 @@
+name: Deploy to AWS EC2
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Test Backend Docker Build
+      run: |
+        cd backend
+        docker build -t backend-test .
+    
+    - name: Test Frontend Docker Build  
+      run: |
+        cd frontend
+        docker build -t frontend-test .
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
     - name: Deploy to EC2
       uses: appleboy/ssh-action@v1.0.3
       with:
@@ -5,12 +37,10 @@
         username: ubuntu
         key: ${{ secrets.EC2_SSH_KEY }}
         script: |
-          # First, update the IP in GitHub secrets (if needed)
-          CURRENT_IP=$(curl -s http://checkip.amazonaws.com)
-          echo "Current IP: $CURRENT_IP"
-          
-          # Your deployment commands...
           cd /home/ubuntu/fusionpact-devops-challenge
           git pull origin main
           sudo docker-compose -f docker-compose.prod.yml down
           sudo docker-compose -f docker-compose.prod.yml up -d --build
+          sudo docker system prune -f
+          echo "✅ Deployment completed successfully!"
+          sudo docker ps
